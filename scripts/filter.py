@@ -26,23 +26,22 @@ def callBack(data,args):
 	else:
 		frontiers=x
     
-
 def mapCallBack(data):
     global mapData
     mapData=data
 
-def globalMap(data):
-	global global1,globalmaps,litraIndx,namespace_init_count,n_robots
-	global1=data
+def globalMap(data,indx):
+	global globalmaps,litraIndx,namespace_init_count,n_robots
 	if n_robots>1:
-		indx=int(data._connection_header['topic'][litraIndx])-namespace_init_count
+		_indx=indx+namespace_init_count
+		rospy.loginfo(str(_indx)+" globalmaps received!!!!!!!!!!!")
 	elif n_robots==1:
-		indx=0
-	globalmaps[indx]=data
+		_indx=0
+	globalmaps[_indx]=data
 
 # Node----------------------------------------------
 def node():
-	global frontiers,mapData,global1,global2,global3,globalmaps,litraIndx,n_robots,namespace_init_count
+	global frontiers,mapData,globalmaps,litraIndx,n_robots,namespace_init_count
 	rospy.init_node('filter', anonymous=False)
 	
 	# fetching all parameters
@@ -52,7 +51,7 @@ def node():
 	goals_topic= rospy.get_param('~goals_topic','/detected_points')	
 	n_robots = rospy.get_param('~n_robots',1)
 	namespace = rospy.get_param('~namespace','')
-	namespace_init_count = rospy.get_param('namespace_init_count',1)
+	namespace_init_count = rospy.get_param('namespace_init_count',0)
 	rateHz = rospy.get_param('~rate',100)
 	litraIndx=len(namespace)
 	rate = rospy.Rate(rateHz)
@@ -62,25 +61,29 @@ def node():
 
 #---------------------------------------------------------------------------------------------------------------
 	
-
 	for i in range(0,n_robots):
- 		 globalmaps.append(OccupancyGrid()) 
+ 		globalmaps.append(OccupancyGrid()) 
  	
- 	if len(namespace) > 0:	 
-	 	for i in range(0,n_robots):
-			rospy.Subscriber(namespace+str(i+namespace_init_count)+'/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap) 
-	elif len(namespace)==0:
-			rospy.Subscriber('/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap) 	
+ 	#if len(namespace) > 0:	 
+	# 	for i in range(0,n_robots):
+	#		rospy.Subscriber(namespace+str(i+namespace_init_count)+'/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,i)
+	#		 	
+	#elif len(namespace)==0:
+	#		rospy.Subscriber('/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0) 	
+	rospy.Subscriber('robot_0/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0)
+	rospy.Subscriber('robot_1/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1)
+	rospy.Subscriber('robot_2/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,2)
+
 #wait if map is not received yet
 	while (len(mapData.data)<1):
 		pass
 #wait if any of robots' global costmap map is not received yet
 	for i in range(0,n_robots):
  		 while (len(globalmaps[i].data)<1):
+ 		 	#rospy.loginfo("robot "+str(i)+"\'s globalmaps not received yet")
  		 	pass
 	
 	global_frame="/"+mapData.header.frame_id
-
 
 	tfLisn=tf.TransformListener()
 	if len(namespace) > 0:

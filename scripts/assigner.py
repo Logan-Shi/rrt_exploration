@@ -19,9 +19,6 @@ from numpy.linalg import norm
 # Subscribers' callbacks------------------------------
 mapData=OccupancyGrid()
 frontiers=[]
-global1=OccupancyGrid()
-global2=OccupancyGrid()
-global3=OccupancyGrid()
 globalmaps=[]
 def callBack(data):
 	global frontiers
@@ -35,7 +32,7 @@ def mapCallBack(data):
 # Node----------------------------------------------
 
 def node():
-	global frontiers,mapData,global1,global2,global3,globalmaps
+	global frontiers,mapData,globalmaps
 	rospy.init_node('assigner', anonymous=False)
 	
 	# fetching all parameters
@@ -47,7 +44,7 @@ def node():
 	frontiers_topic= rospy.get_param('~frontiers_topic','/filtered_points')	
 	n_robots = rospy.get_param('~n_robots',1)
 	namespace = rospy.get_param('~namespace','')
-	namespace_init_count = rospy.get_param('namespace_init_count',1)
+	namespace_init_count = rospy.get_param('namespace_init_count',0)
 	delay_after_assignement=rospy.get_param('~delay_after_assignement',0.5)
 	rateHz = rospy.get_param('~rate',100)
 	
@@ -135,9 +132,9 @@ def node():
 					centroid_record.append(centroids[ip])
 					id_record.append(ir)
 		
-		rospy.loginfo("revenue record: "+str(revenue_record))	
-		rospy.loginfo("centroid record: "+str(centroid_record))	
-		rospy.loginfo("robot IDs record: "+str(id_record))	
+		#rospy.loginfo("revenue record: "+str(revenue_record))	
+		#rospy.loginfo("centroid record: "+str(centroid_record))	
+		#rospy.loginfo("robot IDs record: "+str(id_record))	
 		
 #-------------------------------------------------------------------------	
 		if (len(id_record)>0):
