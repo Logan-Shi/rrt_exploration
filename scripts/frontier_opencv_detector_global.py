@@ -12,15 +12,19 @@ from getfrontier import getfrontier
 # Subscribers' callbacks------------------------------
 mapData=OccupancyGrid()
 
+
 def mapCallBack(data):
     global mapData
     mapData=data
+    
+
+    
 
 # Node----------------------------------------------
 def node():
 		global mapData
 		exploration_goal=PointStamped()
-		map_topic= rospy.get_param('~map_topic','/robot_1/map')#need testing, which map is it exploring
+		map_topic= rospy.get_param('~map_topic','/map_merge/map')
 		rospy.Subscriber(map_topic, OccupancyGrid, mapCallBack)
 		targetspub = rospy.Publisher('/detected_points', PointStamped, queue_size=10)
 		pub = rospy.Publisher('shapes', Marker, queue_size=10)
@@ -62,10 +66,18 @@ def node():
 				exploration_goal.point.y=x[1]
 				exploration_goal.point.z=0	
 
+
 				targetspub.publish(exploration_goal)
 				points.points=[exploration_goal.point]
 				pub.publish(points) 
 			rate.sleep()
+          	
+		
+
+	  	#rate.sleep()
+
+
+
 #_____________________________________________________________________________
 
 if __name__ == '__main__':
@@ -73,3 +85,7 @@ if __name__ == '__main__':
         node()
     except rospy.ROSInterruptException:
         pass
+ 
+ 
+ 
+ 

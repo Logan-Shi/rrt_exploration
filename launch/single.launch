@@ -19,9 +19,7 @@
   </node> -->
  
   <node pkg="rrt_exploration" type="frontier_opencv_detector.py" name="local_detector" output="screen">
-  <param name="eta" value="$(arg eta)"/>
-  <param name="map_topic" value="/robot_1/map"/>
-  <param name="robot_frame" value="/robot_1/base_link"/>
+  <param name="map_topic" value="/robot_0/map"/>
   </node>
 
   <node pkg="rrt_exploration" type="filter.py" name="filter" output="screen">
