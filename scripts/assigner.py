@@ -90,6 +90,7 @@ def node():
 			else:
 				na.append(i)	
 		rospy.loginfo("available robots: "+str(na))	
+		rospy.loginfo("current number of frontiers: "+str(len(centroids)))	
 #------------------------------------------------------------------------- 
 #get dicount and update informationGain
 		for i in nb+na:

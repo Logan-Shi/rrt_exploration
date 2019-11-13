@@ -34,7 +34,7 @@ def globalMap(data,indx):
 	global globalmaps,litraIndx,namespace_init_count,n_robots
 	if n_robots>1:
 		_indx=indx+namespace_init_count
-		rospy.loginfo(str(_indx)+" globalmaps received!!!!!!!!!!!")
+		#rospy.loginfo(str(_indx)+" globalmaps received!!!!!!!!!!!")
 	elif n_robots==1:
 		_indx=0
 	globalmaps[_indx]=data
@@ -151,8 +151,8 @@ def node():
 
 	points_clust.pose.orientation.w = 1.0;
 
-	points_clust.scale.x=0.2;
-	points_clust.scale.y=0.2; 
+	points_clust.scale.x=2;
+	points_clust.scale.y=2; 
 	points_clust.color.r = 0.0/255.0
 	points_clust.color.g = 255.0/255.0
 	points_clust.color.b = 0.0/255.0
