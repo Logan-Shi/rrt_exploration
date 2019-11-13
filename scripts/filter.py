@@ -121,12 +121,12 @@ def node():
 
 	points.pose.orientation.w = 1.0
 
-	points.scale.x=0.2
-	points.scale.y=0.2 
+	points.scale.x=0.5
+	points.scale.y=0.5 
 
-	points.color.r = 255.0/255.0
-	points.color.g = 255.0/255.0
-	points.color.b = 0.0/255.0
+	points.color.r = 0.0/255.0
+	points.color.g = 0.0/255.0
+	points.color.b = 255.0/255.0
 
 	points.color.a=1;
 	points.lifetime = rospy.Duration();
@@ -151,8 +151,8 @@ def node():
 
 	points_clust.pose.orientation.w = 1.0;
 
-	points_clust.scale.x=2;
-	points_clust.scale.y=2; 
+	points_clust.scale.x=1.0
+	points_clust.scale.y=1.0 
 	points_clust.color.r = 0.0/255.0
 	points_clust.color.g = 255.0/255.0
 	points_clust.color.b = 0.0/255.0
@@ -173,7 +173,7 @@ def node():
 #---------------------     Main   Loop     -------------------------------
 #-------------------------------------------------------------------------
 	while not rospy.is_shutdown():
-#-------------------------------------------------------------------------	
+#-------------------------------------------------------------------------
 #Clustering frontier points
 		centroids=[]
 		front=copy(frontiers)
@@ -188,16 +188,12 @@ def node():
 		frontiers=copy(centroids)
 #-------------------------------------------------------------------------	
 #clearing old frontiers  
-      
 		z=0
 		while z<len(centroids):
 			cond=False
 			temppoint.point.x=centroids[z][0]
 			temppoint.point.y=centroids[z][1]
-						
 			for i in range(0,n_robots):
-				
-				
 				transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
 				x=array([transformedPoint.point.x,transformedPoint.point.y])
 				cond=(gridValue(globalmaps[i],x)>threshold) or cond
