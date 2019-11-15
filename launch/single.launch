@@ -19,7 +19,7 @@
   </node> -->
  
   <node pkg="rrt_exploration" type="frontier_opencv_detector.py" name="local_detector" output="screen">
-  <param name="map_topic" value="/robot_0/map"/>
+  <param name="map_topic" value="/robot_1/map"/>
   </node>
 
   <node pkg="rrt_exploration" type="filter.py" name="filter" output="screen">

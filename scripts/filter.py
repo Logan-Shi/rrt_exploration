@@ -51,7 +51,7 @@ def node():
 	goals_topic= rospy.get_param('~goals_topic','/detected_points')	
 	n_robots = rospy.get_param('~n_robots',1)
 	namespace = rospy.get_param('~namespace','')
-	namespace_init_count = rospy.get_param('namespace_init_count',0)
+	namespace_init_count = rospy.get_param('namespace_init_count',1)
 	rateHz = rospy.get_param('~rate',100)
 	litraIndx=len(namespace)
 	rate = rospy.Rate(rateHz)
@@ -64,15 +64,12 @@ def node():
 	for i in range(0,n_robots):
  		globalmaps.append(OccupancyGrid()) 
  	
- 	#if len(namespace) > 0:	 
-	# 	for i in range(0,n_robots):
-	#		rospy.Subscriber(namespace+str(i+namespace_init_count)+'/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,i)
-	#		 	
-	#elif len(namespace)==0:
-	#		rospy.Subscriber('/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0) 	
-	rospy.Subscriber('robot_0/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0)
-	rospy.Subscriber('robot_1/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1)
-	rospy.Subscriber('robot_2/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,2)
+ 	if len(namespace) > 0:	 
+		rospy.Subscriber('robot_0/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0)
+		rospy.Subscriber('robot_1/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1)
+		rospy.Subscriber('robot_2/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,2) 	
+	elif len(namespace)==0:
+		rospy.Subscriber('/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1) 	
 
 #wait if map is not received yet
 	while (len(mapData.data)<1):
@@ -86,6 +83,7 @@ def node():
 	global_frame="/"+mapData.header.frame_id
 
 	tfLisn=tf.TransformListener()
+	rospy.loginfo("namespace_init_count: "+str(namespace_init_count))
 	if len(namespace) > 0:
 		for i in range(0,n_robots):
 			tfLisn.waitForTransform(global_frame[1:], namespace+str(i+namespace_init_count)+'/base_link', rospy.Time(0),rospy.Duration(10.0))

@@ -44,7 +44,7 @@ def node():
 	frontiers_topic= rospy.get_param('~frontiers_topic','/filtered_points')	
 	n_robots = rospy.get_param('~n_robots',1)
 	namespace = rospy.get_param('~namespace','')
-	namespace_init_count = rospy.get_param('namespace_init_count',0)
+	namespace_init_count = rospy.get_param('namespace_init_count',1)
 	delay_after_assignement=rospy.get_param('~delay_after_assignement',0.5)
 	rateHz = rospy.get_param('~rate',100)
 	

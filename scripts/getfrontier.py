@@ -25,18 +25,21 @@ def getfrontier(mapData):
 		for j in range(0,w):
 			if data[i*w+j]==100:
 				img[i,j]=0
-			elif data[i*w+j]==0:
-				img[i,j]=255
 			elif data[i*w+j]==-1:
 				img[i,j]=205
-	
-	
-       	o=cv2.inRange(img,0,1)
+			else:
+				img[i,j]=255
+
+		o=cv2.inRange(img,0,1)
+
 	edges = cv2.Canny(img,0,255)
 	im2, contours, hierarchy = cv2.findContours(o,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	cv2.drawContours(o, contours, -1, (255,255,255), 5)
 	o=cv2.bitwise_not(o) 
 	res = cv2.bitwise_and(o,edges)
+	cv2.imshow('img',img)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 	#------------------------------
 
 	frontier=copy(res)

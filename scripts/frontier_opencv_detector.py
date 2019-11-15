@@ -20,7 +20,7 @@ def mapCallBack(data):
 def node():
 		global mapData
 		exploration_goal=PointStamped()
-		map_topic= rospy.get_param('~map_topic','/robot_2/map')# can't be map/merged_map, because when initialized, it's not published yet
+		map_topic= rospy.get_param('~map_topic','/robot_1/map')# can't be map/merged_map, because when initialized, it's not published yet
 		rospy.Subscriber(map_topic, OccupancyGrid, mapCallBack)
 		targetspub = rospy.Publisher('/detected_points', PointStamped, queue_size=10)
 		pub = rospy.Publisher('shapes', Marker, queue_size=10)
