@@ -18,6 +18,7 @@ def getfrontier(mapData):
 	resolution=mapData.info.resolution
 	Xstartx=mapData.info.origin.position.x
 	Xstarty=mapData.info.origin.position.y
+	rospy.loginfo("x: "+str(Xstartx)+" y: "+str(Xstarty))
 	 
 	img = np.zeros((h, w, 1), np.uint8)
 	
@@ -37,9 +38,6 @@ def getfrontier(mapData):
 	cv2.drawContours(o, contours, -1, (255,255,255), 5)
 	o=cv2.bitwise_not(o) 
 	res = cv2.bitwise_and(o,edges)
-	cv2.imshow('img',img)
-	cv2.waitKey(0)
-	cv2.destroyAllWindows()
 	#------------------------------
 
 	frontier=copy(res)
@@ -48,6 +46,9 @@ def getfrontier(mapData):
 
 	im2, contours, hierarchy = cv2.findContours(frontier,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	all_pts=[]
+	#cv2.imshow('img',frontier)
+	#cv2.waitKey(0)
+	#cv2.destroyAllWindows()
 	if len(contours)>0:
 		upto=len(contours)-1
 		i=0
