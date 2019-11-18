@@ -18,7 +18,7 @@ def getfrontier(mapData):
 	resolution=mapData.info.resolution
 	Xstartx=mapData.info.origin.position.x
 	Xstarty=mapData.info.origin.position.y
-	rospy.loginfo("x: "+str(Xstartx)+" y: "+str(Xstarty))
+	#rospy.loginfo("x: "+str(Xstartx)+" y: "+str(Xstarty))
 	 
 	img = np.zeros((h, w, 1), np.uint8)
 	
