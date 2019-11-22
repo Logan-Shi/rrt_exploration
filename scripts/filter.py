@@ -17,6 +17,7 @@ from rrt_exploration.msg import PointArray
 mapData=OccupancyGrid()
 frontiers=[]
 globalmaps=[]
+localmaps=[]
 def callBack(data,args):
 	global frontiers,min_distance
 	transformedPoint=args[0].transformPoint(args[1],data)
@@ -31,7 +32,7 @@ def mapCallBack(data):
     mapData=data
 
 def globalMap(data,indx):
-	global globalmaps,litraIndx,namespace_init_count,n_robots
+	global globalmaps,namespace_init_count,n_robots
 	if n_robots>1:
 		_indx=indx+namespace_init_count
 		#rospy.loginfo(str(_indx)+" globalmaps received!!!!!!!!!!!")
@@ -39,9 +40,18 @@ def globalMap(data,indx):
 		_indx=0
 	globalmaps[_indx]=data
 
+def localMap(data,indx):
+	global localmaps,namespace_init_count,n_robots
+	if n_robots>1:
+		_indx=indx+namespace_init_count
+		#rospy.loginfo(str(_indx)+" localmaps received!!!!!!!!!!!")
+	elif n_robots==1:
+		_indx=0
+	localmaps[_indx]=data
+
 # Node----------------------------------------------
 def node():
-	global frontiers,mapData,globalmaps,litraIndx,n_robots,namespace_init_count
+	global frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count
 	rospy.init_node('filter', anonymous=False)
 	
 	# fetching all parameters
@@ -53,21 +63,23 @@ def node():
 	namespace = rospy.get_param('~namespace','')
 	namespace_init_count = rospy.get_param('namespace_init_count',1)
 	rateHz = rospy.get_param('~rate',100)
-	litraIndx=len(namespace)
 	rate = rospy.Rate(rateHz)
 #-------------------------------------------
 	rospy.Subscriber(map_topic, OccupancyGrid, mapCallBack)
 	
-
 #---------------------------------------------------------------------------------------------------------------
 	
 	for i in range(0,n_robots):
  		globalmaps.append(OccupancyGrid()) 
+ 		localmaps.append(OccupancyGrid()) 
  	
  	if len(namespace) > 0:	 
 		rospy.Subscriber('robot_0/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,0)
 		rospy.Subscriber('robot_1/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1)
-		rospy.Subscriber('robot_2/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,2) 	
+		rospy.Subscriber('robot_2/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,2)
+		rospy.Subscriber('robot_0/map', OccupancyGrid, localMap,0)
+		rospy.Subscriber('robot_1/map', OccupancyGrid, localMap,1)
+		rospy.Subscriber('robot_2/map', OccupancyGrid, localMap,2)
 	elif len(namespace)==0:
 		rospy.Subscriber('/move_base_node/global_costmap/costmap', OccupancyGrid, globalMap,1) 	
 
@@ -80,6 +92,11 @@ def node():
  		 	#rospy.loginfo("robot "+str(i)+"\'s globalmaps not received yet")
  		 	pass
 	
+	for i in range(0,n_robots):
+ 		 while (len(localmaps[i].data)<1):
+ 		 	#rospy.loginfo("robot "+str(i)+"\'s localmaps not received yet")
+ 		 	pass
+
 	global_frame="/"+mapData.header.frame_id
 
 	tfLisn=tf.TransformListener()
@@ -176,7 +193,7 @@ def node():
 		centroids=[]
 		front=copy(frontiers)
 		if len(front)>1:
-			ms = MeanShift(bandwidth=0.3)   
+			ms = MeanShift(bandwidth=3)   
 			ms.fit(front)
 			centroids= ms.cluster_centers_	 #centroids array is the centers of each cluster		
 
@@ -193,9 +210,11 @@ def node():
 			temppoint.point.y=centroids[z][1]
 			for i in range(0,n_robots):
 				transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
+				transformedPoint1=tfLisn.transformPoint(localmaps[i].header.frame_id,temppoint)
 				x=array([transformedPoint.point.x,transformedPoint.point.y])
-				cond=(gridValue(globalmaps[i],x)>threshold) or cond
-			if (cond or (informationGain(mapData,[centroids[z][0],centroids[z][1]],info_radius*0.5))<0.2):
+				x1=array([transformedPoint1.point.x,transformedPoint1.point.y])
+				cond=(gridValue(globalmaps[i],x)>threshold or gridValue(localmaps[i],x1)>=100) or cond
+			if (cond or (informationGain(mapData,[centroids[z][0],centroids[z][1]],info_radius*0.5))<10):
 				centroids=delete(centroids, (z), axis=0)
 				z=z-1
 			z+=1

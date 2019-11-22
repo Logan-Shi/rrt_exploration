@@ -24,9 +24,9 @@ def getfrontier(mapData):
 	
 	for i in range(0,h):
 		for j in range(0,w):
-			if data[i*w+j]==100:
+			if data[i*w+j]==100:# walls
 				img[i,j]=0
-			elif data[i*w+j]==-1:
+			elif data[i*w+j]==-1:# unexplored
 				img[i,j]=205
 			else:
 				img[i,j]=255
@@ -46,9 +46,10 @@ def getfrontier(mapData):
 
 	im2, contours, hierarchy = cv2.findContours(frontier,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	all_pts=[]
-	#cv2.imshow('img',frontier)
-	#cv2.waitKey(0)
-	#cv2.destroyAllWindows()
+	cv2.imshow('img',img)
+	cv2.imshow('frontier',frontier)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 	if len(contours)>0:
 		upto=len(contours)-1
 		i=0

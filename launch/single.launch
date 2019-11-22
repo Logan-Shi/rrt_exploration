@@ -24,7 +24,7 @@
 
   <node pkg="rrt_exploration" type="filter.py" name="filter" output="screen">
   <param name="map_topic" value="/robot_1/map"/>
-  <param name="info_radius" value="1"/> 
+  <param name="info_radius" value="5"/> 
   <param name="costmap_clearing_threshold" value="70"/> 
   <param name="goals_topic" value="/detected_points"/>
   <param name="namespace_init_count" value="1"/>
@@ -36,7 +36,7 @@
   <node pkg="rrt_exploration" type="assigner.py" name="assigner" output="screen">
   <param name="map_topic" value="/robot_1/map"/>
   <param name="global_frame" value="/robot_1/map"/>
-  <param name="info_radius" value="1"/> 
+  <param name="info_radius" value="5"/> 
   <param name="info_multiplier" value="3.0"/> 
   <param name="hysteresis_radius" value="3.0"/> 
   <param name="hysteresis_gain" value="2.0"/> 
