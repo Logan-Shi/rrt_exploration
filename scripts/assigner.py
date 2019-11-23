@@ -88,55 +88,57 @@ def node():
 			if (robots[i].getState()==1):
 				nb.append(i)
 			else:
-				na.append(i)	
-		rospy.loginfo("available robots: "+str(na))	
-		rospy.loginfo("current number of frontiers: "+str(len(centroids)))	
+				na.append(i)
+		#if len(na)>0:
+			#rospy.loginfo("available robots: "+str(na))	
+		if len(centroids)>0:
+			rospy.loginfo("current number of frontiers: "+str(len(centroids)))	
 #------------------------------------------------------------------------- 
 #get dicount and update informationGain
-		for i in nb+na:
-			infoGain=discount(mapData,robots[i].assigned_point,centroids,infoGain,info_radius)
+		# for i in nb+na:
+		# 	infoGain=discount(mapData,robots[i].assigned_point,centroids,infoGain,info_radius)
 #-------------------------------------------------------------------------            
 		revenue_record=[]
 		centroid_record=[]
 		id_record=[]
 		
-		for ir in na:
+		# for ir in na:
+		# 	for ip in range(0,len(centroids)):
+		# 		cost=norm(robots[ir].getPosition()-centroids[ip])		
+		# 		threshold=1
+		# 		information_gain=infoGain[ip]
+		# 		if (norm(robots[ir].getPosition()-centroids[ip])<=hysteresis_radius):
+
+		# 			information_gain*=hysteresis_gain
+		# 		revenue=information_gain*info_multiplier-cost
+		# 		revenue_record.append(revenue)
+		# 		centroid_record.append(centroids[ip])
+		# 		id_record.append(ir)
+		
+		#if len(na)<1:
+		info_record=[]
+		revenue_record=[]
+		centroid_record=[]
+		id_record=[]
+		for ir in nb+na:
 			for ip in range(0,len(centroids)):
 				cost=norm(robots[ir].getPosition()-centroids[ip])		
-				threshold=1
 				information_gain=infoGain[ip]
-				if (norm(robots[ir].getPosition()-centroids[ip])<=hysteresis_radius):
+				# if (norm(robots[ir].getPosition()-centroids[ip])<=hysteresis_radius):
+				# 	information_gain*=hysteresis_gain
+			
+				# if ((norm(centroids[ip]-robots[ir].assigned_point))<hysteresis_radius):
+				# 	information_gain=informationGain(mapData,[centroids[ip][0],centroids[ip][1]],info_radius)*hysteresis_gain
 
-					information_gain*=hysteresis_gain
 				revenue=information_gain*info_multiplier-cost
+				rospy.loginfo("info record: "+str(information_gain*info_multiplier))	
+				rospy.loginfo("cost record: "+str(cost))
+				rospy.loginfo("revenue record: "+str(revenue))
+				info_record.append(information_gain)
 				revenue_record.append(revenue)
 				centroid_record.append(centroids[ip])
 				id_record.append(ir)
-		
-		if len(na)<1:
-			revenue_record=[]
-			centroid_record=[]
-			id_record=[]
-			for ir in nb:
-				for ip in range(0,len(centroids)):
-					cost=norm(robots[ir].getPosition()-centroids[ip])		
-					threshold=1
-					information_gain=infoGain[ip]
-					if (norm(robots[ir].getPosition()-centroids[ip])<=hysteresis_radius):
-						information_gain*=hysteresis_gain
-				
-					if ((norm(centroids[ip]-robots[ir].assigned_point))<hysteresis_radius):
-						information_gain=informationGain(mapData,[centroids[ip][0],centroids[ip][1]],info_radius)*hysteresis_gain
-
-					revenue=information_gain*info_multiplier-cost
-					revenue_record.append(revenue)
-					centroid_record.append(centroids[ip])
-					id_record.append(ir)
-		
-		#rospy.loginfo("revenue record: "+str(revenue_record))	
-		#rospy.loginfo("centroid record: "+str(centroid_record))	
-		#rospy.loginfo("robot IDs record: "+str(id_record))	
-		
+	
 #-------------------------------------------------------------------------	
 		if (len(id_record)>0):
 			winner_id=revenue_record.index(max(revenue_record))

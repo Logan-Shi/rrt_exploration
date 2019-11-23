@@ -136,8 +136,8 @@ def node():
 
 	points.pose.orientation.w = 1.0
 
-	points.scale.x=0.5
-	points.scale.y=0.5 
+	points.scale.x=0.1
+	points.scale.y=0.1 
 
 	points.color.r = 0.0/255.0
 	points.color.g = 0.0/255.0
@@ -166,8 +166,8 @@ def node():
 
 	points_clust.pose.orientation.w = 1.0;
 
-	points_clust.scale.x=1.0
-	points_clust.scale.y=1.0 
+	points_clust.scale.x=0.2
+	points_clust.scale.y=0.2 
 	points_clust.color.r = 0.0/255.0
 	points_clust.color.g = 255.0/255.0
 	points_clust.color.b = 0.0/255.0
@@ -193,7 +193,7 @@ def node():
 		centroids=[]
 		front=copy(frontiers)
 		if len(front)>1:
-			ms = MeanShift(bandwidth=3)   
+			ms = MeanShift(bandwidth=0.3)   
 			ms.fit(front)
 			centroids= ms.cluster_centers_	 #centroids array is the centers of each cluster		
 
@@ -214,7 +214,7 @@ def node():
 				x=array([transformedPoint.point.x,transformedPoint.point.y])
 				x1=array([transformedPoint1.point.x,transformedPoint1.point.y])
 				cond=(gridValue(globalmaps[i],x)>threshold or gridValue(localmaps[i],x1)>=100) or cond
-			if (cond or (informationGain(mapData,[centroids[z][0],centroids[z][1]],info_radius*0.5))<10):
+			if (cond or (informationGain(mapData,[centroids[z][0],centroids[z][1]],info_radius*0.5))<0.2):
 				centroids=delete(centroids, (z), axis=0)
 				z=z-1
 			z+=1
