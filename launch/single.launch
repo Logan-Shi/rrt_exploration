@@ -33,7 +33,7 @@
   <param name="rate" value="100"/>
   </node>
   
-  <node pkg="rrt_exploration" type="assigner.py" name="assigner" output="screen">
+<!--   <node pkg="rrt_exploration" type="assigner.py" name="assigner" output="screen">
   <param name="map_topic" value="/robot_1/map"/>
   <param name="global_frame" value="/robot_1/map"/>
   <param name="info_radius" value="1"/> 
@@ -46,6 +46,6 @@
   <param name="namespace" value="/robot_"/>
   <param name="delay_after_assignement" value="0.5"/>
   <param name="rate" value="100"/>
-  </node>
+  </node> -->
   
 </launch>

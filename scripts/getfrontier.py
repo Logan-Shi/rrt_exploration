@@ -13,7 +13,7 @@ import cv2
 #-----------------------------------------------------
 
 def getfrontier(mapData):
-
+	debug = 0
 	laserRange = 10
 	robots=[]
 	robots.append(robot("/robot_1"))
@@ -57,23 +57,8 @@ def getfrontier(mapData):
 	if y2 > h:
 		y2 = h
 	img = rimg[y1:y2, x1:x2]
-	# for i in range(0,2*r):
-	# 	for j in range(0,2*r):
-	# 		i_d = xRobot-r+i
-	# 		j_d = yRobot-r+j
-	# 		index_d = i_d*w+j_d 
-	# 		if  index_d > len(data) or index_d < 0:
-	# 			img[i,j]=205
-	# 			continue
-	# 		if data[index_d]>threshold:# walls
-	# 			img[i,j]=0
-	# 		elif data[index_d]==-1:# unexplored
-	# 			img[i,j]=205
-	# 		else: # free space
-	# 			img[i,j]=255
 
 	o=cv2.inRange(img,0,1)
-	# cv2.imshow('img',img)
 
 	kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
 	img1=cv2.dilate(img,kernel)
@@ -101,10 +86,12 @@ def getfrontier(mapData):
 
 	im2, contours, hierarchy = cv2.findContours(frontier,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	all_pts=[]
-	
-	# cv2.imshow('frontier',frontier)
-	# cv2.waitKey(0)
-	# cv2.destroyAllWindows()
+
+	if debug:
+		cv2.imshow('img',img)
+		cv2.imshow('frontier',frontier)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
 
 	if len(contours)>0:
 		upto=len(contours)-1
