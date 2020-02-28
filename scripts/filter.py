@@ -9,7 +9,7 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PointStamped 
 import tf
 from numpy import array,vstack,delete
-from functions import gridValue,informationGain
+from functions import gridValue,informationGain,isNew,isExplored,robot,dist
 from sklearn.cluster import MeanShift
 from rrt_exploration.msg import PointArray
 
@@ -36,7 +36,6 @@ def callBack(data,args):
 			new_frontiers=vstack((new_frontiers,x))
 		else:
 			new_frontiers=x
-	# print("new_frontiers: "+new_frontiers[0][1])
     
 def mapCallBack(data):
     global mapData
@@ -64,7 +63,7 @@ def localMap(data,indx):
 def node():
 	global frontiers,new_frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count
 	rospy.init_node('filter', anonymous=False)
-	
+	Robot = robot("/robot_1")
 	# fetching all parameters
 	map_topic= rospy.get_param('~map_topic','/map')
 	threshold= rospy.get_param('~costmap_clearing_threshold',70)
@@ -124,12 +123,6 @@ def node():
 
 	rospy.loginfo("the map and global costmaps are received")
 	
-	
-	# wait if no frontier is received yet 
-	while len(new_frontiers)<1:
-		pass
-	
-	
 	points=Marker()
 #Set the frame ID and timestamp.  See the TF tutorials for information on these.
 	points.header.frame_id= mapData.header.frame_id
@@ -184,27 +177,37 @@ def node():
 		# if len(front)==1:
 		# 	centroids=front
 		# frontiers=copy(centroids)
+		# wait if no frontier is received yet
+		# print("new_frontiers: "+str(len(new_frontiers)))
+		while len(new_frontiers)<1:
+			pass
 #-------------------------------------------------------------------------	
-#clearing old frontiers  
+#clearing old frontiers 
 		# print("started")
-		z=0
-		while z<len(new_frontiers):
-			cond=False
-			temppoint.point.x=new_frontiers[z][0]
-			temppoint.point.y=new_frontiers[z][1]
+		filtered_frontiers = new_frontiers
+		
+		# print("filtered_frontiers: "+str(filtered_frontiers))
+
+		for point in filtered_frontiers:
+			temppoint.point.x=point[0]
+			temppoint.point.y=point[1]
 			for i in range(0,n_robots):
 				transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
-				x=array([transformedPoint.point.x,transformedPoint.point.y])
-				cond=(gridValue(globalmaps[i],x)>threshold) or cond
-			if (cond or (informationGain(mapData,[new_frontiers[z][0],new_frontiers[z][1]],info_radius*0.5))<0.2):
-				new_frontiers=delete(new_frontiers, (z), axis=0)
-				z=z-1
-			z+=1
-		if len(frontiers)>0:
-			frontiers=vstack((frontiers,new_frontiers))
-		else:
-			frontiers=new_frontiers
-		print("current frontiers: "+str(len(frontiers)))
+				x=[transformedPoint.point.x,transformedPoint.point.y]
+				# print("current list: "+str(frontiers))
+				# print("current point: "+str(x))
+				if (isNew(frontiers,x)):
+					frontiers.append(copy(x))
+		
+		x,y = Robot.getPosition()
+		for point in frontiers:
+			cond=False
+			for i in range(0,n_robots):
+				cond=(gridValue(globalmaps[i],point)>threshold) or cond
+				if cond or (dist([x,y],point)<5):
+					frontiers.remove(point)
+
+		# print("current frontiers: "+str(len(frontiers)))
 #-------------------------------------------------------------------------
 #publishing
 		arraypoints.points=[]

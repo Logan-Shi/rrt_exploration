@@ -8,6 +8,21 @@ from geometry_msgs.msg import PoseStamped
 from numpy import floor
 from numpy.linalg import norm
 from numpy import inf
+from math import hypot
+
+# class Point(object):
+# 	def __init__(self, xParam = 0.0,yParam = 0.0):
+# 		self.x = xParam
+# 		self.y = yParam
+
+# 	def __str__(self):
+# 		return "(%.2f, %.2f)"% (self.x ,self.y)
+
+# 	def dist(self,pt):
+# 		xDiff = self.x - pt.x
+# 		yDiff = self.y - pt.y
+# 		return math.sqrt(xDiff ** 2 + yDiff ** 2)
+
 #________________________________________________________________________________
 class robot:
 	goal = MoveBaseGoal()
@@ -23,7 +38,7 @@ class robot:
 		cond=0;	
 		while cond==0:	
 			try:
-				(trans,rot) = self.listener.lookupTransform(self.global_frame, self.name+'/base_link', rospy.Time(0))
+				(trans,rot) = self.listener.lookupTransform(self.global_frame, self.name+'/base_link', rospy.Time(0.0))
 				cond=1
 			except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 				cond==0
@@ -43,7 +58,7 @@ class robot:
 		cond=0;	
 		while cond==0:	
 			try:
-				(trans,rot) = self.listener.lookupTransform(self.global_frame, self.name+'/base_link', rospy.Time(0))
+				(trans,rot) = self.listener.lookupTransform(self.global_frame, self.name+'/base_link', rospy.Time(0.0))
 				cond=1
 			except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 				cond==0
@@ -91,7 +106,7 @@ def point_of_index(mapData,i):
 #________________________________________________________________________________		
 
 def informationGain(mapData,point,r):
-	wall_factor = 3
+	wall_factor = 100
 	infoGain=0
 	den=0
 	index=index_of_point(mapData,point)
@@ -191,10 +206,43 @@ def gridValue(mapData,Xp):
  else:
  	return 100
 
+def isNew(plist,point):
+	if len(plist)<1:
+		return True
+	for p in plist:
+		# print(str(plist))
+		# print(str(p))
+		# print(str(point))
+		if dist(p,point) < 5:
+			return False
+	return True
  
-
+def dist(p1,p2):
+	dist = hypot(p1[0] - p2[0], p1[1] - p2[1])
+	# print(dist)
+	return dist
 		
 
+def isExplored(mapData,point,r):
+	wall_factor = 100
+	infoGain=0
+	den=0
+	index=index_of_point(mapData,point)
+	r_region=int(5*2/mapData.info.resolution)
+	init_index=index-r_region*(mapData.info.width+1)	
+	for n in range(0,2*r_region+1):
+		start=n*mapData.info.width+init_index
+		end=start+2*r_region
+		limit=((start/mapData.info.width)+2)*mapData.info.width
+		for i in range(start,end+1):
+			if (i>=0 and i<limit and i<len(mapData.data)):
+				if(norm(array(point)-point_of_index(mapData,i))<=r):
+					den+=1
+					if mapData.data[i]==-1:
+						infoGain+=1
+					if mapData.data[i]==100:
+						infoGain-=wall_factor
+	return float(infoGain)/den < 0.2
 
 
 

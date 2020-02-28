@@ -60,10 +60,10 @@ def getfrontier(mapData):
 
 	o=cv2.inRange(img,0,1)
 
-	kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-	img1=cv2.dilate(img,kernel)
+	# kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+	# img1=cv2.dilate(img,kernel)
 	#cv2.imshow('img1',img1)
-	edges = cv2.Canny(img1,0,255)
+	edges = cv2.Canny(img,0,255)
 	#cv2.imshow('edges',edges)
 	
 	im2, contours, hierarchy = cv2.findContours(o,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -71,12 +71,14 @@ def getfrontier(mapData):
 
 	o=cv2.bitwise_not(o) 
 
-	kernel1= cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-	o1=cv2.erode(o,kernel1)
+	# kernel1= cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+	# o1=cv2.erode(o,kernel1)
 	# cv2.imshow('o1',o1)
 
-	res = cv2.bitwise_and(o1,edges)
+	res = cv2.bitwise_and(o,edges)
+	# rospy.loginfo("t1")
 	res1=cv2.resize(res,(0,0),fx=0.2,fy=0.2,interpolation=cv2.INTER_NEAREST)
+	# rospy.loginfo("t2")
 	#cv2.imshow('res1',res1)
 	#------------------------------
        #frontier=copy(res)
@@ -89,6 +91,7 @@ def getfrontier(mapData):
 
 	if debug:
 		cv2.imshow('img',img)
+		cv2.imshow('edges',edges)
 		cv2.imshow('frontier',frontier)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()

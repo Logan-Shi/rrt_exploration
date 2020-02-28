@@ -10,6 +10,7 @@ from geometry_msgs.msg import PointStamped
 from rrt_exploration.msg import PointArray
 from getfrontier import getfrontier
 from geometry_msgs.msg import Point
+from visualization_msgs.msg import Marker
 
 #-----------------------------------------------------
 # Subscribers' callbacks------------------------------
@@ -31,11 +32,38 @@ def node():
 # wait until map is received, when a map is received, mapData.header.seq will not be < 1
 		while mapData.header.seq<1 or len(mapData.data)<1:
 			pass
-    	   	
-		rate = rospy.Rate(50)	
+
+		pub = rospy.Publisher('new_frontiers', Marker, queue_size=10)
+		points=Marker()
+#Set the frame ID and timestamp.  See the TF tutorials for information on these.
+		points.header.frame_id= mapData.header.frame_id
+		points.header.stamp= rospy.Time.now()
+	
+		points.ns= "markers2"
+		points.id = 0
+		
+		points.type = Marker.POINTS
+		
+#Set the marker action for latched frontiers.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+		points.action = Marker.ADD;
+	
+		points.pose.orientation.w = 1.0
+	
+		points.scale.x=0.1
+		points.scale.y=0.1 
+	
+		points.color.r = 255.0/255.0
+		points.color.g = 0.0/255.0
+		points.color.b = 0.0/255.0
+	
+		points.color.a=1;
+		points.lifetime = rospy.Duration(1.0);
+		rate = rospy.Rate(1)
 #-------------------------------OpenCV frontier detection------------------------------------------
 		while not rospy.is_shutdown():
+			# print("running")
 			frontiers=getfrontier(mapData)
+			# print("points detected")
 			arraypoints.points=[]
 			for i in range(len(frontiers)):
 				x=frontiers[i]
@@ -44,6 +72,12 @@ def node():
 				exploration_goal.z=0	
 				arraypoints.points.append(copy(exploration_goal))
 			targetspub.publish(arraypoints)
+
+			pp=[]	
+			for q in arraypoints.points:
+				pp.append(copy(q))
+			points.points=pp
+			pub.publish(points)
 			rate.sleep()
 #_____________________________________________________________________________
 
