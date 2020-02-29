@@ -72,6 +72,9 @@ class robot:
 		self.client.send_goal(robot.goal)
 		self.assigned_point=array(point)
 	
+	def getGoal(self):
+		return self.assigned_point
+
 	def cancelGoal(self):
 		self.client.cancel_goal()
 		self.assigned_point=self.getPosition()
@@ -106,7 +109,8 @@ def point_of_index(mapData,i):
 #________________________________________________________________________________		
 
 def informationGain(mapData,point,r):
-	wall_factor = 10
+	wall_factor = 100
+	unknown_factor = 10
 	infoGain=0
 	den=0
 	index=index_of_point(mapData,point)
@@ -122,6 +126,8 @@ def informationGain(mapData,point,r):
 					den+=1
 					if mapData.data[i]==100:
 						infoGain-=wall_factor
+					elif mapData.data[i]==-1:
+						infoGain+=unknown_factor
 					else:
 						infoGain+=1
 	return float(infoGain)/den
@@ -213,7 +219,7 @@ def isNew(plist,point):
 		# print(str(plist))
 		# print(str(p))
 		# print(str(point))
-		if dist(p,point) < 5:
+		if dist([p[0],p[1]],point) < 5:
 			return False
 	return True
  

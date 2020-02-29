@@ -10,19 +10,22 @@ from geometry_msgs.msg import PointStamped
 import tf
 from numpy import array,vstack,delete
 from functions import gridValue,informationGain,isNew,isExplored,robot,dist
-from sklearn.cluster import MeanShift
 from rrt_exploration.msg import PointArray
 
 # Subscribers' callbacks------------------------------
 mapData=OccupancyGrid()
 frontiers=[]
-new_frontiers = []
 globalmaps=[]
 localmaps=[]
+callbackTime = rospy.Time()
+haveNew = 0.0
 def callBack(data,args):
 	# print("msg received")
-	global new_frontiers,min_distance
-	new_frontiers = []
+	global frontiers,globalmaps,callbackTime
+	temppoint=PointStamped()
+	temppoint.header.frame_id= mapData.header.frame_id
+	temppoint.header.stamp=rospy.Time(0)
+	temppoint.point.z=0.0
 	for point in data.points:
 		temp = PointStamped()
 		temp.header.frame_id = mapData.header.frame_id
@@ -30,13 +33,15 @@ def callBack(data,args):
 		temp.point.x = point.x
 		temp.point.y = point.y
 		temp.point.z = point.z
-		transformedPoint=args[0].transformPoint(args[1],temp)
-		x=[array([transformedPoint.point.x,transformedPoint.point.y])]
-		if len(new_frontiers)>0:
-			new_frontiers=vstack((new_frontiers,x))
-		else:
-			new_frontiers=x
-    
+		temppoint=args[0].transformPoint(args[1],temp)
+		transformedPoint=args[0].transformPoint(globalmaps[0].header.frame_id,temppoint)
+		
+		x=[transformedPoint.point.x,transformedPoint.point.y]
+		# print("current list: "+str(frontiers))
+		# print("current point: "+str(x))
+		if (isNew(frontiers,x)):
+			frontiers.append([x[0],x[1],-99.0,0.0,99.0])
+
 def mapCallBack(data):
     global mapData
     mapData=data
@@ -61,14 +66,17 @@ def localMap(data,indx):
 
 # Node----------------------------------------------
 def node():
-	global frontiers,new_frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count
+	global frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count,callbackTime
 	rospy.init_node('filter', anonymous=False)
 	Robot = robot("/robot_1")
+	Robot.sendGoal(Robot.getPosition())
 	# fetching all parameters
 	map_topic= rospy.get_param('~map_topic','/map')
 	threshold= rospy.get_param('~costmap_clearing_threshold',70)
 	info_radius= rospy.get_param('~info_radius',1.0)					#this can be smaller than the laser scanner range, >> smaller >>less computation time>> too small is not good, info gain won't be accurate
-	goals_topic= rospy.get_param('~goals_topic','/detected_points')	
+	goals_topic= rospy.get_param('~goals_topic','/detected_points')
+	info_multiplier=rospy.get_param('~info_multiplier',3.0)
+	delay_after_assignement=rospy.get_param('~delay_after_assignement',0.5)
 	n_robots = rospy.get_param('~n_robots',1)
 	namespace = rospy.get_param('~namespace','')
 	namespace_init_count = rospy.get_param('namespace_init_count',1)
@@ -151,65 +159,82 @@ def node():
 	p=Point()
 
 	p.z = 0;
-		
-	temppoint=PointStamped()
-	temppoint.header.frame_id= mapData.header.frame_id
-	temppoint.header.stamp=rospy.Time(0)
-	temppoint.point.z=0.0
 	
 	arraypoints=PointArray()
 	tempPoint=Point()
 	tempPoint.z=0.0
+
+	callbackTime = rospy.get_rostime()
 #-------------------------------------------------------------------------
 #---------------------     Main   Loop     -------------------------------
 #-------------------------------------------------------------------------
 	while not rospy.is_shutdown():
-#-------------------------------------------------------------------------
-#Clustering frontier points
-		# centroids=[]
-		# front=copy(frontiers)
-		# if len(front)>1:
-		# 	ms = MeanShift(bandwidth=0.3)   
-		# 	ms.fit(front)
-		# 	centroids= ms.cluster_centers_	 #centroids array is the centers of each cluster		
-
-		# #if there is only one frontier no need for clustering, i.e. centroids=frontiers
-		# if len(front)==1:
-		# 	centroids=front
-		# frontiers=copy(centroids)
-		# wait if no frontier is received yet
-		# print("new_frontiers: "+str(len(new_frontiers)))
+		haveNew = 0.0
+		x,y = Robot.getPosition()
 		if len(frontiers)>0:
-			x,y = Robot.getPosition()
-			for point in frontiers:
+			for ip in frontiers:
+				# print("cost: "+str(frontiers))
+				cost = dist([x,y],[ip[0],ip[1]])
+				ip[4] = cost
+				# print("cost calced"+str(ip))
+	
+			for ip in frontiers:
 				cond=False
 				for i in range(0,n_robots):
-					cond=(gridValue(globalmaps[i],point)>10) or cond
-					if cond or (dist([x,y],point)<5):
-						frontiers.remove(point)
+					cond=(gridValue(globalmaps[i],[ip[0],ip[1]])>10) or cond
+					if cond or (ip[4] < info_radius):
+						# print("removed: "+str(ip))
+						# print(str(cost))
+						frontiers.remove(ip)
 
-		if len(new_frontiers)>0:
-			# print("started")
-			filtered_frontiers = new_frontiers
-				
-			# print("filtered_frontiers: "+str(filtered_frontiers))
-	
-			for point in filtered_frontiers:
-				temppoint.point.x=point[0]
-				temppoint.point.y=point[1]
-				for i in range(0,n_robots):
-					transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
-					x=[transformedPoint.point.x,transformedPoint.point.y]
-					# print("current list: "+str(frontiers))
-					# print("current point: "+str(x))
-					if (isNew(frontiers,x)):
-						frontiers.append(copy(x))
-#-------------------------------------------------------------------------	
-#clearing old frontiers 
+		for ip in range(0,len(frontiers)):
+			if frontiers[ip][3] == 0.0:
+				frontiers[ip][2] = informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)
+				haveNew = 1.0
+				# rospy.loginfo("added infoGain"+str(frontiers[ip][2]))
+				frontiers[ip][3] = 1.0
+			# else:
+				# print("already calced, skip")
 		
-
-		# print("current frontiers: "+str(len(frontiers)))
-#-------------------------------------------------------------------------
+		now = rospy.get_rostime()
+		delay = (now.secs - callbackTime.secs)
+		# print("time stamp %i %i",now.secs,callbackTime.secs)
+		# print("delay"+str(delay))
+		if (haveNew) or (delay>10):
+			# Robot.cancelGoal()
+			info_record=[]
+			revenue_record=[]
+			centroid_record=[]
+			id_record=[]
+			ir = 0
+			
+			
+			for ip in range(0,len(frontiers)):
+				information_gain=frontiers[ip][2]
+				cost = frontiers[ip][4]
+				# if (norm(robots[ir].getPosition()-frontiers[ip])<=hysteresis_radius):
+				# 	information_gain*=hysteresis_gain
+			
+				# if ((norm(frontiers[ip]-robots[ir].assigned_point))<hysteresis_radius):
+				# 	information_gain=informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)*hysteresis_gain
+				revenue=information_gain*info_multiplier-cost
+				# rospy.loginfo("info record: "+str(information_gain*info_multiplier))	
+				# rospy.loginfo("cost record: "+str(cost))
+				# rospy.loginfo("revenue record: "+str(revenue))
+				info_record.append(information_gain)
+				revenue_record.append(revenue)
+				centroid_record.append(frontiers[ip])
+				id_record.append(ir)
+		
+	#-------------------------------------------------------------------------	
+			# print("current frontiers list: "+str(frontiers))
+			if (len(id_record)>0):
+				callbackTime = rospy.get_rostime()
+				winner_id=revenue_record.index(max(revenue_record))
+				Robot.sendGoal(centroid_record[winner_id])
+				rospy.loginfo(namespace+str(namespace_init_count+id_record[winner_id])+"  assigned to  "+str(centroid_record[winner_id])+" with revenue of "+str(revenue_record[winner_id]))	
+				# rospy.sleep(delay_after_assignement)
+#-------------------------------------------------------------------------	
 #publishing
 		arraypoints.points=[]
 		for i in frontiers:
@@ -225,7 +250,7 @@ def node():
 			pp.append(copy(p))
 		points.points=pp
 		pub.publish(points)
-		rate.sleep()
+		
 #-------------------------------------------------------------------------
 
 if __name__ == '__main__':
