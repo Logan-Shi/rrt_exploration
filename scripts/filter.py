@@ -184,7 +184,7 @@ def node():
 			for point in frontiers:
 				cond=False
 				for i in range(0,n_robots):
-					cond=(gridValue(globalmaps[i],point)>threshold) or cond
+					cond=(gridValue(globalmaps[i],point)>10) or cond
 					if cond or (dist([x,y],point)<5):
 						frontiers.remove(point)
 

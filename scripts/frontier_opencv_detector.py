@@ -58,7 +58,7 @@ def node():
 	
 		points.color.a=1;
 		points.lifetime = rospy.Duration(1.0);
-		rate = rospy.Rate(1)
+		rate = rospy.Rate(100)
 #-------------------------------OpenCV frontier detection------------------------------------------
 		while not rospy.is_shutdown():
 			# print("running")

@@ -123,7 +123,7 @@ def informationGain(mapData,point,r):
 					if mapData.data[i]==100:
 						infoGain-=wall_factor
 					else:
-						infoGain+=wall_factor
+						infoGain+=1
 	return float(infoGain)/den
 #________________________________________________________________________________
 
