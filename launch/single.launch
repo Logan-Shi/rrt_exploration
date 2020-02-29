@@ -44,8 +44,8 @@
   <param name="n_robots" value="1"/>
   <param name="namespace_init_count" value="1"/>
   <param name="namespace" value="/robot_"/>
-  <param name="delay_after_assignement" value="0.5"/>
-  <param name="rate" value="1"/>
+  <param name="delay_after_assignement" value="10"/>
+  <param name="rate" value="0.5"/>
   </node> -->
   
 </launch>

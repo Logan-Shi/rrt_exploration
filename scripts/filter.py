@@ -179,33 +179,34 @@ def node():
 		# frontiers=copy(centroids)
 		# wait if no frontier is received yet
 		# print("new_frontiers: "+str(len(new_frontiers)))
-		while len(new_frontiers)<1:
-			pass
+		if len(frontiers)>0:
+			x,y = Robot.getPosition()
+			for point in frontiers:
+				cond=False
+				for i in range(0,n_robots):
+					cond=(gridValue(globalmaps[i],point)>threshold) or cond
+					if cond or (dist([x,y],point)<5):
+						frontiers.remove(point)
+
+		if len(new_frontiers)>0:
+			# print("started")
+			filtered_frontiers = new_frontiers
+				
+			# print("filtered_frontiers: "+str(filtered_frontiers))
+	
+			for point in filtered_frontiers:
+				temppoint.point.x=point[0]
+				temppoint.point.y=point[1]
+				for i in range(0,n_robots):
+					transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
+					x=[transformedPoint.point.x,transformedPoint.point.y]
+					# print("current list: "+str(frontiers))
+					# print("current point: "+str(x))
+					if (isNew(frontiers,x)):
+						frontiers.append(copy(x))
 #-------------------------------------------------------------------------	
 #clearing old frontiers 
-		# print("started")
-		filtered_frontiers = new_frontiers
 		
-		# print("filtered_frontiers: "+str(filtered_frontiers))
-
-		for point in filtered_frontiers:
-			temppoint.point.x=point[0]
-			temppoint.point.y=point[1]
-			for i in range(0,n_robots):
-				transformedPoint=tfLisn.transformPoint(globalmaps[i].header.frame_id,temppoint)
-				x=[transformedPoint.point.x,transformedPoint.point.y]
-				# print("current list: "+str(frontiers))
-				# print("current point: "+str(x))
-				if (isNew(frontiers,x)):
-					frontiers.append(copy(x))
-		
-		x,y = Robot.getPosition()
-		for point in frontiers:
-			cond=False
-			for i in range(0,n_robots):
-				cond=(gridValue(globalmaps[i],point)>threshold) or cond
-				if cond or (dist([x,y],point)<5):
-					frontiers.remove(point)
 
 		# print("current frontiers: "+str(len(frontiers)))
 #-------------------------------------------------------------------------

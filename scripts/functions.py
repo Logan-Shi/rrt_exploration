@@ -106,7 +106,7 @@ def point_of_index(mapData,i):
 #________________________________________________________________________________		
 
 def informationGain(mapData,point,r):
-	wall_factor = 100
+	wall_factor = 10
 	infoGain=0
 	den=0
 	index=index_of_point(mapData,point)
@@ -120,10 +120,10 @@ def informationGain(mapData,point,r):
 			if (i>=0 and i<limit and i<len(mapData.data)):
 				if(norm(array(point)-point_of_index(mapData,i))<=r):
 					den+=1
-					if mapData.data[i]==-1:
-						infoGain+=1
 					if mapData.data[i]==100:
 						infoGain-=wall_factor
+					else:
+						infoGain+=wall_factor
 	return float(infoGain)/den
 #________________________________________________________________________________
 
