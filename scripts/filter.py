@@ -21,25 +21,19 @@ callbackTime = rospy.Time()
 haveNew = 0.0
 def callBack(data,args):
 	# print("msg received")
-	global frontiers,globalmaps,callbackTime
-	temppoint=PointStamped()
-	temppoint.header.frame_id= mapData.header.frame_id
-	temppoint.header.stamp=rospy.Time(0)
-	temppoint.point.z=0.0
+	global frontiers,globalmaps,callbackTime,info_radius
+	temp = PointStamped()
+	temp.header.frame_id = mapData.header.frame_id
+	temp.header.stamp = rospy.Time(0)
 	for point in data.points:
-		temp = PointStamped()
-		temp.header.frame_id = mapData.header.frame_id
-		temp.header.stamp = rospy.Time(0)
 		temp.point.x = point.x
 		temp.point.y = point.y
-		temp.point.z = point.z
-		temppoint=args[0].transformPoint(args[1],temp)
-		transformedPoint=args[0].transformPoint(globalmaps[0].header.frame_id,temppoint)
+		transformedPoint=args[0].transformPoint(globalmaps[0].header.frame_id,temp)
 		
 		x=[transformedPoint.point.x,transformedPoint.point.y]
 		# print("current list: "+str(frontiers))
 		# print("current point: "+str(x))
-		if (isNew(frontiers,x)):
+		if isExplored(mapData,x) and (isNew(frontiers,x,info_radius/mapData.info.resolution)):
 			frontiers.append([x[0],x[1],-99.0,0.0,99.0])
 
 def mapCallBack(data):
@@ -66,8 +60,9 @@ def localMap(data,indx):
 
 # Node----------------------------------------------
 def node():
-	global frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count,callbackTime
+	global frontiers,mapData,globalmaps,localmaps,n_robots,namespace_init_count,callbackTime,buf,info_radius
 	rospy.init_node('filter', anonymous=False)
+	buf = 1001
 	Robot = robot("/robot_1")
 	Robot.sendGoal(Robot.getPosition())
 	# fetching all parameters
@@ -170,6 +165,7 @@ def node():
 #-------------------------------------------------------------------------
 	while not rospy.is_shutdown():
 		haveNew = 0.0
+		buf+=1
 		x,y = Robot.getPosition()
 		if len(frontiers)>0:
 			for ip in frontiers:
@@ -182,10 +178,13 @@ def node():
 				cond=False
 				for i in range(0,n_robots):
 					cond=(gridValue(globalmaps[i],[ip[0],ip[1]])>10) or cond
+					cond = (not isExplored(mapData,[ip[0],ip[1]])) or cond
 					if cond or (ip[4] < info_radius):
 						# print("removed: "+str(ip))
 						# print(str(cost))
 						frontiers.remove(ip)
+		else:
+			callbackTime = rospy.get_rostime()
 
 		for ip in range(0,len(frontiers)):
 			if frontiers[ip][3] == 0.0:
@@ -200,7 +199,9 @@ def node():
 		delay = (now.secs - callbackTime.secs)
 		# print("time stamp %i %i",now.secs,callbackTime.secs)
 		# print("delay"+str(delay))
-		if (haveNew) or (delay>10):
+		# print("buf"+str(buf))
+		if (buf > 500): # and (haveNew) or (delay>10):
+			buf = 0
 			# Robot.cancelGoal()
 			info_record=[]
 			revenue_record=[]
@@ -210,6 +211,13 @@ def node():
 			
 			
 			for ip in range(0,len(frontiers)):
+
+				if frontiers[ip][4] < 0:
+					continue
+
+				if (delay>10):
+					frontiers[ip][2] = informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)
+
 				information_gain=frontiers[ip][2]
 				cost = frontiers[ip][4]
 				# if (norm(robots[ir].getPosition()-frontiers[ip])<=hysteresis_radius):

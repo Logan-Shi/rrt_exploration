@@ -14,23 +14,23 @@ import cv2
 
 def getfrontier(mapData):
 	debug = 0
-	laserRange = 10
-	robots=[]
-	robots.append(robot("/robot_1"))
-	x,y = robots[0].getPosition()
+	# laserRange = 10
+	# robots=[]
+	# robots.append(robot("/robot_1"))
+	# x,y = robots[0].getPosition()
 	data=mapData.data
 	w=mapData.info.width
 	h=mapData.info.height
 	resolution=mapData.info.resolution
-	r = int(laserRange / resolution)+1
+	# r = int(laserRange / resolution)+1
 	Xstartx=mapData.info.origin.position.x
 	Xstarty=mapData.info.origin.position.y
 	#rospy.loginfo("x: "+str(Xstartx)+" y: "+str(Xstarty))
 	# print("robot at : "+str(x)+str(y))
 	# print("map : "+str(w)+str(h))
 	
-	xRobot = int((x - Xstartx)/resolution)
-	yRobot = int((y - Xstarty)/resolution)
+	# xRobot = int((x - Xstartx)/resolution)
+	# yRobot = int((y - Xstarty)/resolution)
 	# print("Robot index in map : "+str(xRobot)+str(yRobot))
 	# print("x1,y1: "+str([xRobot-r,yRobot-r])+"x2,y2: "+str([xRobot+r,yRobot+r]))
 	rimg = np.zeros((h, w, 1), np.uint8)
@@ -44,19 +44,19 @@ def getfrontier(mapData):
 				rimg[i,j]=205
 			else: # free space
 				rimg[i,j]=255
-	x1 = xRobot-r
-	if x1 < 0:
-		x1 = 0
-	y1 = yRobot-r
-	if y1 < 0:
-		y1 = 0
-	x2 = xRobot+r
-	if x2 > w:
-		x2 = w
-	y2 = yRobot+r
-	if y2 > h:
-		y2 = h
-	img = rimg[y1:y2, x1:x2]
+	# x1 = xRobot-r
+	# if x1 < 0:
+	# 	x1 = 0
+	# y1 = yRobot-r
+	# if y1 < 0:
+	# 	y1 = 0
+	# x2 = xRobot+r
+	# if x2 > w:
+	# 	x2 = w
+	# y2 = yRobot+r
+	# if y2 > h:
+	# 	y2 = h
+	img = rimg
 
 	o=cv2.inRange(img,0,1)
 
@@ -106,9 +106,9 @@ def getfrontier(mapData):
 				cnt = contours[i]
 				M = cv2.moments(cnt)
 				#cx = int(M['m10']/M['m00'])
-				cx = 5*int(M['m10']/M['m00'])+x1
+				cx = 5*int(M['m10']/M['m00'])
 				#cy = int(M['m01']/M['m00'])
-				cy = 5*int(M['m01']/M['m00'])+y1
+				cy = 5*int(M['m01']/M['m00'])
 				xr=cx*resolution+Xstartx
 				yr=cy*resolution+Xstarty
 				pt=[np.array([xr,yr])]

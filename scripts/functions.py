@@ -112,7 +112,7 @@ def informationGain(mapData,point,r):
 	wall_factor = 100
 	unknown_factor = 10
 	infoGain=0
-	den=0
+	den=1
 	index=index_of_point(mapData,point)
 	r_region=int(r/mapData.info.resolution)
 	init_index=index-r_region*(mapData.info.width+1)	
@@ -131,6 +131,7 @@ def informationGain(mapData,point,r):
 					else:
 						infoGain+=1
 	return float(infoGain)/den
+
 #________________________________________________________________________________
 
 def discount(mapData,assigned_pt,centroids,infoGain,r):
@@ -212,14 +213,14 @@ def gridValue(mapData,Xp):
  else:
  	return 100
 
-def isNew(plist,point):
+def isNew(plist,point,r):
 	if len(plist)<1:
 		return True
 	for p in plist:
 		# print(str(plist))
 		# print(str(p))
 		# print(str(point))
-		if dist([p[0],p[1]],point) < 5:
+		if dist([p[0],p[1]],point) < r:
 			return False
 	return True
  
@@ -229,12 +230,10 @@ def dist(p1,p2):
 	return dist
 		
 
-def isExplored(mapData,point,r):
-	wall_factor = 100
-	infoGain=0
-	den=0
+def isExplored(mapData,point):
+	r = 0.5
 	index=index_of_point(mapData,point)
-	r_region=int(5*2/mapData.info.resolution)
+	r_region=int(r/mapData.info.resolution)
 	init_index=index-r_region*(mapData.info.width+1)	
 	for n in range(0,2*r_region+1):
 		start=n*mapData.info.width+init_index
@@ -243,12 +242,12 @@ def isExplored(mapData,point,r):
 		for i in range(start,end+1):
 			if (i>=0 and i<limit and i<len(mapData.data)):
 				if(norm(array(point)-point_of_index(mapData,i))<=r):
-					den+=1
 					if mapData.data[i]==-1:
-						infoGain+=1
-					if mapData.data[i]==100:
-						infoGain-=wall_factor
-	return float(infoGain)/den < 0.2
+						return True
+					if mapData.data[i]>100:
+						return False
+	return False
+
 
 
 
