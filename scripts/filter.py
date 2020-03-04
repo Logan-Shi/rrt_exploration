@@ -25,6 +25,7 @@ def callBack(data,args):
 	temp = PointStamped()
 	temp.header.frame_id = mapData.header.frame_id
 	temp.header.stamp = rospy.Time(0)
+	# print("called")
 	for point in data.points:
 		temp.point.x = point.x
 		temp.point.y = point.y
@@ -33,8 +34,14 @@ def callBack(data,args):
 		x=[transformedPoint.point.x,transformedPoint.point.y]
 		# print("current list: "+str(frontiers))
 		# print("current point: "+str(x))
-		if isExplored(mapData,x) and (isNew(frontiers,x,info_radius/mapData.info.resolution)):
+		needExplore = isExplored(mapData,x)
+		flagNew = (isNew(frontiers,x,info_radius))
+		# print("needExplore: "+str(needExplore))
+		# print("flagNew: "+str(flagNew))
+		if needExplore and flagNew:
+			# print("append")
 			frontiers.append([x[0],x[1],-99.0,0.0,99.0])
+	# print("finish")
 
 def mapCallBack(data):
     global mapData
@@ -141,8 +148,8 @@ def node():
 
 	points.pose.orientation.w = 1.0
 
-	points.scale.x=0.1
-	points.scale.y=0.1 
+	points.scale.x=0.2
+	points.scale.y=0.2 
 
 	points.color.r = 0.0/255.0
 	points.color.g = 0.0/255.0
@@ -164,6 +171,7 @@ def node():
 #---------------------     Main   Loop     -------------------------------
 #-------------------------------------------------------------------------
 	while not rospy.is_shutdown():
+		# print("started")
 		haveNew = 0.0
 		buf+=1
 		x,y = Robot.getPosition()
@@ -173,19 +181,19 @@ def node():
 				cost = dist([x,y],[ip[0],ip[1]])
 				ip[4] = cost
 				# print("cost calced"+str(ip))
-	
+			# print("finished cost calc")
 			for ip in frontiers:
 				cond=False
 				for i in range(0,n_robots):
 					cond=(gridValue(globalmaps[i],[ip[0],ip[1]])>10) or cond
 					cond = (not isExplored(mapData,[ip[0],ip[1]])) or cond
-					if cond or (ip[4] < info_radius):
+					if cond:# or (ip[4] < info_radius):
 						# print("removed: "+str(ip))
 						# print(str(cost))
 						frontiers.remove(ip)
 		else:
 			callbackTime = rospy.get_rostime()
-
+		# print("finished remove")
 		for ip in range(0,len(frontiers)):
 			if frontiers[ip][3] == 0.0:
 				frontiers[ip][2] = informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)

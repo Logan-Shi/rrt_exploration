@@ -34,7 +34,7 @@ class robot:
 		self.name=name
 		self.global_frame=rospy.get_param('~global_frame','robot_1/map')
 		self.listener=tf.TransformListener()
-		self.listener.waitForTransform(self.global_frame, name+'/base_link', rospy.Time(0),rospy.Duration(10.0))
+		self.listener.waitForTransform(self.global_frame, name+'/base_link', rospy.Time.now(),rospy.Duration(100.0))
 		cond=0;	
 		while cond==0:	
 			try:
@@ -221,7 +221,10 @@ def isNew(plist,point,r):
 		# print(str(p))
 		# print(str(point))
 		if dist([p[0],p[1]],point) < r:
+			# print(str(r))
+			# print("---------too close to"+str(p))
 			return False
+	# print("--------is new")
 	return True
  
 def dist(p1,p2):
@@ -231,7 +234,8 @@ def dist(p1,p2):
 		
 
 def isExplored(mapData,point):
-	r = 0.5
+	r = 0.1
+	hitUnexplore = False
 	index=index_of_point(mapData,point)
 	r_region=int(r/mapData.info.resolution)
 	init_index=index-r_region*(mapData.info.width+1)	
@@ -242,11 +246,16 @@ def isExplored(mapData,point):
 		for i in range(start,end+1):
 			if (i>=0 and i<limit and i<len(mapData.data)):
 				if(norm(array(point)-point_of_index(mapData,i))<=r):
-					if mapData.data[i]==-1:
-						return True
-					if mapData.data[i]>100:
+					if mapData.data[i]>50:
+						# print("----------hit wall")
 						return False
-	return False
+					if mapData.data[i]==-1:
+						# print("---------hit unexplored")
+						hitUnexplore = True
+			else:
+				return True
+	# print("------------hit nothing")
+	return hitUnexplore
 
 
 
