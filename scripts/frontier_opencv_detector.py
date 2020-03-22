@@ -25,7 +25,7 @@ def node():
 		global mapData
 		exploration_goal=Point()
 		arraypoints=PointArray()
-		map_topic= rospy.get_param('~map_topic','/robot_1/map')# can't be map/merged_map, because when initialized, it's not published yet
+		map_topic= rospy.get_param('~map_topic','/robot_1/submap')# can't be map/merged_map, because when initialized, it's not published yet
 		rospy.Subscriber(map_topic, OccupancyGrid, mapCallBack)
 		targetspub = rospy.Publisher('/detected_points', PointArray, queue_size=10)
 		rospy.init_node('detector', anonymous=False)
@@ -58,7 +58,7 @@ def node():
 	
 		points.color.a=1;
 		points.lifetime = rospy.Duration(1.0);
-		rate = rospy.Rate(5)
+		rate = rospy.Rate(2)
 #-------------------------------OpenCV frontier detection------------------------------------------
 		while not rospy.is_shutdown():
 			# print("running")

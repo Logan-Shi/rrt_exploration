@@ -34,13 +34,13 @@ def callBack(data,args):
 		x=[transformedPoint.point.x,transformedPoint.point.y]
 		# print("current list: "+str(frontiers))
 		# print("current point: "+str(x))
-		needExplore = isExplored(mapData,x)
+		needExplore = isExplored(mapData,x,0.25)
 		flagNew = (isNew(frontiers,x,info_radius))
 		# print("needExplore: "+str(needExplore))
 		# print("flagNew: "+str(flagNew))
 		if needExplore and flagNew:
 			# print("append")
-			frontiers.append([x[0],x[1],-99.0,0.0,99.0])
+			frontiers.append([x[0],x[1],-99.0,0.0,99.0,0.0])
 	# print("finish")
 
 def mapCallBack(data):
@@ -180,36 +180,45 @@ def node():
 				# print("cost: "+str(frontiers))
 				cost = dist([x,y],[ip[0],ip[1]])
 				ip[4] = cost
+				if (ip[4] < info_radius/2):
+					ip[5] = 1.0
 				# print("cost calced"+str(ip))
 			# print("finished cost calc")
-			for ip in frontiers:
+
+				if ip[3] == 0.0:
+					ip[2] = informationGain(mapData,[ip[0],ip[1]],info_radius)
+					haveNew = 1.0
+					# Robot.cancelGoal()
+					# rospy.loginfo("added infoGain"+str(frontiers[ip][2]))
+					ip[3] = 1.0
+				# else:
+					# print("already calced, skip")
+
 				cond=False
 				for i in range(0,n_robots):
 					cond=(gridValue(globalmaps[i],[ip[0],ip[1]])>10) or cond
-					cond = (not isExplored(mapData,[ip[0],ip[1]])) or cond
-					if cond:# or (ip[4] < info_radius):
+					cond = (not isExplored(mapData,[ip[0],ip[1]],0.3)) or cond
+
+					if cond:#
 						# print("removed: "+str(ip))
 						# print(str(cost))
 						frontiers.remove(ip)
+						haveNew = 1.0
+	
 		else:
 			callbackTime = rospy.get_rostime()
 		# print("finished remove")
-		for ip in range(0,len(frontiers)):
-			if frontiers[ip][3] == 0.0:
-				frontiers[ip][2] = informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)
-				haveNew = 1.0
-				# rospy.loginfo("added infoGain"+str(frontiers[ip][2]))
-				frontiers[ip][3] = 1.0
-			# else:
-				# print("already calced, skip")
-		
+
 		now = rospy.get_rostime()
 		delay = (now.secs - callbackTime.secs)
 		# print("time stamp %i %i",now.secs,callbackTime.secs)
 		# print("delay"+str(delay))
 		# print("buf"+str(buf))
-		if (buf > 500): # and (haveNew) or (delay>10):
-			buf = 0
+		if haveNew:
+			delay_buf = 0.5
+		else:
+			delay_buf = 0.1
+		if (delay>delay_buf):
 			# Robot.cancelGoal()
 			info_record=[]
 			revenue_record=[]
@@ -220,11 +229,8 @@ def node():
 			
 			for ip in range(0,len(frontiers)):
 
-				if frontiers[ip][4] < 0:
+				if frontiers[ip][4] < 0 or (frontiers[ip][5] == 1):
 					continue
-
-				if (delay>10):
-					frontiers[ip][2] = informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)
 
 				information_gain=frontiers[ip][2]
 				cost = frontiers[ip][4]

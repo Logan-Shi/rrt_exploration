@@ -69,6 +69,8 @@ class robot:
 		robot.goal.target_pose.pose.position.x=point[0]
 		robot.goal.target_pose.pose.position.y=point[1]
 		robot.goal.target_pose.pose.orientation.w = 1.0
+		if dist(point,self.assigned_point)<0.2:
+			pass
 		self.client.send_goal(robot.goal)
 		self.assigned_point=array(point)
 	
@@ -211,7 +213,7 @@ def gridValue(mapData,Xp):
  if int(index) < len(Data):
  	return Data[int(index)]
  else:
- 	return 100
+ 	return 0
 
 def isNew(plist,point,r):
 	if len(plist)<1:
@@ -233,8 +235,7 @@ def dist(p1,p2):
 	return dist
 		
 
-def isExplored(mapData,point):
-	r = 0.1
+def isExplored(mapData,point,r):
 	hitUnexplore = False
 	index=index_of_point(mapData,point)
 	r_region=int(r/mapData.info.resolution)
@@ -246,12 +247,12 @@ def isExplored(mapData,point):
 		for i in range(start,end+1):
 			if (i>=0 and i<limit and i<len(mapData.data)):
 				if(norm(array(point)-point_of_index(mapData,i))<=r):
-					if mapData.data[i]>50:
-						# print("----------hit wall")
-						return False
+					# if mapData.data[i]>50:
+					# 	# print("----------hit wall")
+					# 	return False
 					if mapData.data[i]==-1:
 						# print("---------hit unexplored")
-						hitUnexplore = True
+						return True
 			else:
 				return True
 	# print("------------hit nothing")
