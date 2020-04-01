@@ -6,6 +6,7 @@ from copy import copy
 import rospy
 from nav_msgs.msg import OccupancyGrid
 from functions import robot
+from sklearn.cluster import MeanShift
 
 import numpy as np
 import cv2
@@ -120,3 +121,68 @@ def getfrontier(mapData):
 	
 	return all_pts
 
+def croatiangetfrontier(mapData):
+	debug = 0
+
+	data=mapData.data
+	w=mapData.info.width
+	h=mapData.info.height
+	resolution=mapData.info.resolution
+
+	Xstartx=mapData.info.origin.position.x
+	Xstarty=mapData.info.origin.position.y
+
+	threshold = 50
+	rimg = np.zeros((h, w, 1), np.uint8)
+	frontiers = []
+	for i in range(0,h):
+		for j in range(0,w):
+			if data[i*w+j]==-1 and isFrontier(i,j,mapData):
+				frontiers.append([j*resolution+Xstartx,i*resolution+Xstarty])
+
+	if debug:
+		cv2.imshow('rimg',rimg)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
+
+	centroids=[]
+	front=copy(frontiers)
+	if len(front)>1:
+		ms = MeanShift(bandwidth=0.3)   
+		ms.fit(front)
+		centroids= ms.cluster_centers_	 #centroids array is the centers of each cluster		
+	#if there is only one frontier no need for clustering, i.e. centroids=frontiers
+	if len(front)==1:
+		centroids=front
+	frontiers=copy(centroids)
+	
+	return frontiers
+
+def isFrontier(x,y,mapData):
+	data=mapData.data
+	w=mapData.info.width
+	h=mapData.info.height
+	resolution=mapData.info.resolution
+	isFront = False
+	threshold = 50
+	if isFree(x+1,y,mapData) or isFree(x,y+1,mapData) or isFree(x-1,y,mapData) or isFree(x,y-1,mapData):
+		isFront = True
+
+	return isFront
+
+def isFree(i,j,mapData):
+	data=mapData.data
+	w=mapData.info.width
+	h=mapData.info.height
+	resolution=mapData.info.resolution
+	threshold = 50
+
+	# print("rows: "+str(h)+" cols: "+str(w))
+	# print("row: "+str(i)+" col: "+str(j))
+	if i>=h or j>=w:
+		# print("invalid return")
+		return False
+
+	if data[i*w+j]>=0 and data[i*w+j]<threshold:
+		return True
+	return False

@@ -8,7 +8,7 @@ from visualization_msgs.msg import Marker
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PointStamped
 from rrt_exploration.msg import PointArray
-from getfrontier import getfrontier
+from getfrontier import getfrontier,croatiangetfrontier
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
 
@@ -62,7 +62,7 @@ def node():
 #-------------------------------OpenCV frontier detection------------------------------------------
 		while not rospy.is_shutdown():
 			# print("running")
-			frontiers=getfrontier(mapData)
+			frontiers=croatiangetfrontier(mapData)
 			# print("points detected")
 			arraypoints.points=[]
 			for i in range(len(frontiers)):
