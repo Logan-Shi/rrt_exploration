@@ -67,7 +67,7 @@ def getfrontier(mapData):
 	#cv2.imshow('edges',edges)
 	
 	im2, contours, hierarchy = cv2.findContours(o,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-	cv2.drawContours(o, contours, -1, (255,255,255), 5)
+	cv2.drawContours(o, contours, -1, (255,255,255), 50)
 
 	o=cv2.bitwise_not(o) 
 
@@ -92,7 +92,7 @@ def getfrontier(mapData):
 	if debug:
 		cv2.imshow('img',img)
 		cv2.imshow('edges',edges)
-		cv2.imshow('frontier',frontier)
+		cv2.imshow('o',o)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
