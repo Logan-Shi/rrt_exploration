@@ -62,7 +62,7 @@ def node():
 #-------------------------------OpenCV frontier detection------------------------------------------
 		while not rospy.is_shutdown():
 			# print("running")
-			frontiers=croatiangetfrontier(mapData)
+			frontiers=getfrontier(mapData)
 			# print("points detected")
 			arraypoints.points=[]
 			for i in range(len(frontiers)):

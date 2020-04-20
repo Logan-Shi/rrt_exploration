@@ -165,7 +165,7 @@ def isFrontier(x,y,mapData):
 	resolution=mapData.info.resolution
 	isFront = False
 	threshold = 50
-	if isFree(x+1,y,mapData) or isFree(x,y+1,mapData) or isFree(x-1,y,mapData) or isFree(x,y-1,mapData):
+	if isFree(x,y+1,mapData) or isFree(x,y-1,mapData):
 		isFront = True
 
 	return isFront
@@ -179,7 +179,7 @@ def isFree(i,j,mapData):
 
 	# print("rows: "+str(h)+" cols: "+str(w))
 	# print("row: "+str(i)+" col: "+str(j))
-	if i>=h or j>=w:
+	if i>=h or j>=w or j<0 or i<0:
 		# print("invalid return")
 		return False
 
