@@ -22,6 +22,10 @@
   <param name="map_topic" value="/robot_1/map"/>
   </node>
 
+  <node pkg="rrt_exploration" type="entropy_rec.py" name="recorder" output="screen">
+  <param name="map_topic" value="/robot_1/map"/>
+  </node>
+
   <node pkg="rrt_exploration" type="filter.py" name="filter" output="screen">
   <param name="map_topic" value="/robot_1/map"/>
   <param name="info_radius" value="2"/> 

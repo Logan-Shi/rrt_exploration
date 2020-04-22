@@ -10,6 +10,7 @@ from sklearn.cluster import MeanShift
 
 import numpy as np
 import cv2
+import math
 
 #-----------------------------------------------------
 
@@ -148,7 +149,7 @@ def croatiangetfrontier(mapData):
 	centroids=[]
 	front=copy(frontiers)
 	if len(front)>1:
-		ms = MeanShift(bandwidth=0.3)   
+		ms = MeanShift(bandwidth=1)   
 		ms.fit(front)
 		centroids= ms.cluster_centers_	 #centroids array is the centers of each cluster		
 	#if there is only one frontier no need for clustering, i.e. centroids=frontiers
@@ -186,3 +187,47 @@ def isFree(i,j,mapData):
 	if data[i*w+j]>=0 and data[i*w+j]<threshold:
 		return True
 	return False
+
+def recData(mapData):
+	debug = 0
+	# laserRange = 10
+	# robots=[]
+	# robots.append(robot("/robot_1"))
+	# x,y = robots[0].getPosition()
+	data=mapData.data
+	w=mapData.info.width
+	h=mapData.info.height
+	resolution=mapData.info.resolution
+	# r = int(laserRange / resolution)+1
+	Xstartx=mapData.info.origin.position.x
+	Xstarty=mapData.info.origin.position.y
+	#rospy.loginfo("x: "+str(Xstartx)+" y: "+str(Xstarty))
+	# print("robot at : "+str(x)+str(y))
+	# print("map : "+str(w)+str(h))
+	
+	# xRobot = int((x - Xstartx)/resolution)
+	# yRobot = int((y - Xstarty)/resolution)
+	# print("Robot index in map : "+str(xRobot)+str(yRobot))
+	# print("x1,y1: "+str([xRobot-r,yRobot-r])+"x2,y2: "+str([xRobot+r,yRobot+r]))
+	rimg = np.zeros((h, w, 1), np.uint8)
+	threshold = 50
+	
+	entropy = 0
+	prob = np.zeros((h,w,1),np.uint32)
+	frec = open("test.txt","a")
+	for i in range(0,h):
+		for j in range(0,w):
+			if data[i*w+j]>threshold:# walls
+				# prob[i,j] = 1
+				entropy = entropy + 0.5 * math.log(0.5)
+				rimg[i,j]=0
+			elif data[i*w+j]==-1:# unexplored
+				rimg[i,j]=205
+			else: # free space
+				# prob[i,j] = 0
+				entropy = entropy + 0.5 * math.log(0.5)
+				rimg[i,j]=255
+	time = rospy.get_rostime()
+	t = time.secs
+	frec.write(str(t)+';'+str(entropy)+'\n')
+	frec.close()

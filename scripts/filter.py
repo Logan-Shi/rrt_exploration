@@ -186,7 +186,7 @@ def node():
 			# print("finished cost calc")
 
 				if ip[3] == 0.0:
-					ip[2] = informationGain(mapData,[ip[0],ip[1]],info_radius)
+					# ip[2] = informationGain(mapData,[ip[0],ip[1]],info_radius)
 					haveNew = 1.0
 					# Robot.cancelGoal()
 					# rospy.loginfo("added infoGain"+str(frontiers[ip][2]))
@@ -220,7 +220,7 @@ def node():
 			delay_buf = 0.1
 		if (delay>delay_buf):
 			# Robot.cancelGoal()
-			info_record=[]
+			# info_record=[]
 			revenue_record=[]
 			centroid_record=[]
 			id_record=[]
@@ -232,18 +232,18 @@ def node():
 				if frontiers[ip][4] < 0 or (frontiers[ip][5] == 1):
 					continue
 
-				information_gain=frontiers[ip][2]
+				# information_gain=frontiers[ip][2]
 				cost = frontiers[ip][4]
 				# if (norm(robots[ir].getPosition()-frontiers[ip])<=hysteresis_radius):
 				# 	information_gain*=hysteresis_gain
 			
 				# if ((norm(frontiers[ip]-robots[ir].assigned_point))<hysteresis_radius):
 				# 	information_gain=informationGain(mapData,[frontiers[ip][0],frontiers[ip][1]],info_radius)*hysteresis_gain
-				revenue=information_gain*info_multiplier-cost
+				revenue=-cost
 				# rospy.loginfo("info record: "+str(information_gain*info_multiplier))	
 				# rospy.loginfo("cost record: "+str(cost))
 				# rospy.loginfo("revenue record: "+str(revenue))
-				info_record.append(information_gain)
+				# info_record.append(information_gain)
 				revenue_record.append(revenue)
 				centroid_record.append(frontiers[ip])
 				id_record.append(ir)
